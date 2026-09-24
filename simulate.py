@@ -28,16 +28,19 @@ BASE_POPULARITY = {
 PASTRIES = {"Butter Croissant", "Blueberry Muffin", "Chocolate Chip Cookie"}
 ICED = {"Cold Brew", "Iced Vanilla Latte"}
 
-# Known events planted in the data, so we can later check whether
-# the anomaly detector actually finds them. (days_ago is inclusive.)
-PLANTED_EVENTS = [
-    {"name": "Cold brew machine broken", "days_ago": range(16, 21), "item_off": "Cold Brew"},
-    {"name": "Neighborhood festival",    "days_ago": [45],          "traffic_x": 2.0},
+# Known events planted in the data, so we can check whether the anomaly
+# detector actually finds them. (days_ago is inclusive.)
+# item + item_x: multiply that item's popularity (0.0 = unavailable)
+# traffic_x:     multiply the number of orders that day
+PLANTED_EVENTS = [                                                         # CHANGED
+    {"name": "Cold brew machine broken", "days_ago": range(16, 21),
+     "item": "Cold Brew", "item_x": 0.0},
+    {"name": "Neighborhood festival", "days_ago": [45], "traffic_x": 2.0},
 ]
 
 
-def events_for(days_ago):
-    return [e for e in PLANTED_EVENTS if days_ago in e["days_ago"]]
+def events_for(days_ago, planted):                                         # CHANGED
+    return [e for e in planted if days_ago in e["days_ago"]]
 
 
 def item_weight(name, day, hour, events):
@@ -51,8 +54,9 @@ def item_weight(name, day, hour, events):
         w *= 1.6
     if name == "Chocolate Chip Cookie" and hour >= 14:
         w *= 2
-    if any(e.get("item_off") == name for e in events):
-        w = 0
+    for e in events:                                                       # CHANGED
+        if e.get("item") == name:
+            w *= e["item_x"]
     return w
 
 
@@ -66,8 +70,8 @@ def orders_that_day(rng, day, i, events):
     return max(0, round(base * weekday * noise * boost))
 
 
-def simulate():
-    rng = random.Random(SEED)
+def simulate(seed=SEED, planted=PLANTED_EVENTS):                          # CHANGED
+    rng = random.Random(seed)                                              # CHANGED
     init_db()
 
     with get_conn() as conn:
@@ -87,7 +91,7 @@ def simulate():
         for i in range(DAYS):
             day = today - timedelta(days=DAYS - i)
             days_ago = (today - day).days
-            events = events_for(days_ago)
+            events = events_for(days_ago, planted)                         # CHANGED
 
             for _ in range(orders_that_day(rng, day, i, events)):
                 hour = rng.choices(hours, weights=list(HOUR_WEIGHTS.values()))[0]
