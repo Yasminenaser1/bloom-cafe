@@ -147,3 +147,74 @@ async function loadAlerts() {
 loadAlerts().catch(() => {
   document.getElementById("alerts").innerHTML = `<li class="muted">Couldn't load alerts.</li>`;
 });
+
+// --- Morning report + AI insights (published daily by GitHub Actions) ---
+const whenGenerated = iso =>
+  new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+
+const writtenBy = source =>
+  source && source.startsWith("model") ? "AI-written title" : "template title";
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+async function loadReport() {
+  const box = document.getElementById("report");
+  const data = await (await fetch("/api/report/latest")).json();
+  box.innerHTML = "";
+  if (!data.available) {
+    box.append(el("p", "muted", "No report published yet."));
+    return;
+  }
+  const f = data.facts;
+  document.getElementById("report-day").textContent = f.date;
+  box.append(el("p", "report-headline", data.headline));
+
+  const list = el("ul", "report-facts");
+  for (const line of [
+    `Revenue: ${f.revenue} from ${f.orders} (average ticket ${f.avg_ticket})`,
+    `Top sellers: ${f.top_sellers}`,
+    `Busiest hour: ${f.busiest_hour}`,
+    `Alerts: ${f.alerts}`,
+  ]) list.append(el("li", null, line));
+  box.append(list);
+
+  const headlineBy = data.source.startsWith("model") ? "AI-written headline" : "template headline";
+  box.append(el("p", "meta", `Generated ${whenGenerated(data.generated_at)} · ${headlineBy}`));
+}
+
+async function loadInsights() {
+  const box = document.getElementById("ai-insights");
+  const data = await (await fetch("/api/ai-insights")).json();
+  box.innerHTML = "";
+  if (!data.available || !data.insights.length) {
+    box.append(el("p", "muted", "No insights published yet."));
+    return;
+  }
+  document.getElementById("insights-day").textContent = `as of ${data.as_of}`;
+
+  for (const ins of data.insights) {
+    const card = el("div", "insight");
+    const head = el("div", "insight-head");
+    head.append(el("h3", null, ins.title), el("span", "badge", writtenBy(ins.title_source)));
+    card.append(head, el("p", null, ins.recommendation));
+
+    const details = el("details");
+    details.append(el("summary", null, "Show the numbers"), el("p", "muted", ins.summary));
+    card.append(details);
+    box.append(card);
+  }
+  box.append(el("p", "meta",
+    `Generated ${whenGenerated(data.generated_at)} with ${data.model} · recommendations are chosen by code from the data`));
+}
+
+loadReport().catch(() => {
+  document.getElementById("report").innerHTML = "<p class='muted'>Couldn't load the report.</p>";
+});
+loadInsights().catch(() => {
+  document.getElementById("ai-insights").innerHTML = "<p class='muted'>Couldn't load insights.</p>";
+});

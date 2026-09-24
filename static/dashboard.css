@@ -73,3 +73,36 @@ th           { color: #7a6a60; font-weight: 500; font-size: 0.9rem; }
 .alert.spike    { background: #eaf5ee; }
 .alert.spike .icon { color: #2f7d4f; }
 .alert.expected { background: #f6f1ea; }
+
+/* --- Morning report & AI insights --- */
+.report-headline { font-size: 1.1rem; font-weight: 600; margin: 0 0 8px; }
+.report-facts    { margin: 0; padding-left: 18px; }
+.report-facts li { padding: 3px 0; }
+.meta            { margin: 12px 0 0; font-size: 0.8rem; color: #7a6a60; }
+.insight {
+  padding: 12px 0;
+  border-bottom: 1px solid #f1e6dc;
+}
+.insight:last-of-type { border-bottom: none; }
+.insight-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.insight h3 { margin: 0; font-size: 1rem; }
+.insight p  { margin: 6px 0 0; }
+.badge {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: #7a6a60;
+  background: #f6f1ea;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+details summary {
+  margin-top: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #7a6a60;
+}

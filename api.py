@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query
@@ -99,3 +100,21 @@ def get_anomalies(days: int = Query(60, ge=14, le=180)):
         if e["metric"] in seasonal and e["direction"] == "spike":
             e["note"] = "Seasonal item launch: expected, not a problem."
     return events
+
+
+def read_latest(folder):
+    """Serve the newest published file, or say clearly that none exists yet."""
+    path = Path(__file__).parent / folder / "latest.json"
+    if not path.exists():
+        return {"available": False}
+    return {"available": True, **json.loads(path.read_text())}
+
+
+@app.get("/api/report/latest")
+def latest_report():
+    return read_latest("reports")
+
+
+@app.get("/api/ai-insights")
+def latest_insights():
+    return read_latest("insights")
