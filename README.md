@@ -7,6 +7,8 @@ about the cafe's sales.
 **Live demo:** https://coffee-bloom.onrender.com
 (free tier: the first visit after a quiet period can take ~30–60 seconds to wake up)
 
+![Bloom Cafe owner dashboard](figures/dashboard.png)
+
 The core idea: **code computes every number; AI only writes words.** Every AI feature
 was tested, broke in a specific way, and was redesigned around that failure. The
 measurements are below.
