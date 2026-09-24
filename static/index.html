@@ -11,21 +11,37 @@
     <h1>Bloom Cafe</h1>
     <p>Coffee, tea, and fresh pastries.</p>
   </header>
-  <main id="menu">Loading menu…</main>
+
+  <main>
+    <div id="menu">Loading menu…</div>
+
+    <aside id="cart">
+      <h2>Your order</h2>
+      <ul id="cart-lines"></ul>
+      <p id="cart-empty">Nothing added yet.</p>
+      <p id="cart-total"></p>
+      <button id="place-order" disabled>Place order</button>
+      <p id="order-status" role="status"></p>
+    </aside>
+  </main>
 
   <script>
+    const money = cents => "$" + (cents / 100).toFixed(2);
+    const menuById = {};
+    const cart = {};  // menu_item_id -> quantity
+
     async function loadMenu() {
       const res = await fetch("/api/menu");
       const items = await res.json();
 
-      // Group items by category
       const byCategory = {};
       for (const item of items) {
+        menuById[item.id] = item;
         (byCategory[item.category] ??= []).push(item);
       }
 
-      const main = document.getElementById("menu");
-      main.innerHTML = "";
+      const menu = document.getElementById("menu");
+      menu.innerHTML = "";
 
       for (const [category, list] of Object.entries(byCategory)) {
         const section = document.createElement("section");
@@ -36,19 +52,86 @@
         for (const item of list) {
           const row = document.createElement("div");
           row.className = "item";
-          row.innerHTML = `<div><h3></h3><p></p></div><span class="price"></span>`;
+          row.innerHTML = `
+            <div><h3></h3><p></p></div>
+            <div class="buy"><span class="price"></span><button>Add</button></div>`;
           row.querySelector("h3").textContent = item.name + (item.seasonal ? " 🍂" : "");
           row.querySelector("p").textContent = item.description;
-          row.querySelector(".price").textContent = "$" + (item.price_cents / 100).toFixed(2);
+          row.querySelector(".price").textContent = money(item.price_cents);
+          row.querySelector("button").addEventListener("click", () => changeQty(item.id, +1));
           section.append(row);
         }
-        main.append(section);
+        menu.append(section);
       }
     }
 
-    loadMenu().catch(() => {
-      document.getElementById("menu").textContent = "Couldn't load the menu.";
-    });
+    function changeQty(id, delta) {
+      cart[id] = (cart[id] || 0) + delta;
+      if (cart[id] <= 0) delete cart[id];
+      document.getElementById("order-status").textContent = "";
+      renderCart();
+    }
+
+    function renderCart() {
+      const lines = document.getElementById("cart-lines");
+      lines.innerHTML = "";
+      let total = 0;
+
+      for (const [id, qty] of Object.entries(cart)) {
+        const item = menuById[id];
+        total += item.price_cents * qty;
+
+        const li = document.createElement("li");
+        li.innerHTML = `<span class="name"></span>
+          <span class="qty"><button>−</button><b></b><button>+</button></span>`;
+        li.querySelector(".name").textContent = item.name;
+        li.querySelector("b").textContent = qty;
+        const [minus, plus] = li.querySelectorAll("button");
+        minus.addEventListener("click", () => changeQty(id, -1));
+        plus.addEventListener("click", () => changeQty(id, +1));
+        lines.append(li);
+      }
+
+      const empty = Object.keys(cart).length === 0;
+      document.getElementById("cart-empty").hidden = !empty;
+      document.getElementById("cart-total").textContent = empty ? "" : "Total: " + money(total);
+      document.getElementById("place-order").disabled = empty;
+    }
+
+    async function placeOrder() {
+      const button = document.getElementById("place-order");
+      const status = document.getElementById("order-status");
+      button.disabled = true;
+      status.textContent = "Placing order…";
+
+      const items = Object.entries(cart).map(([id, qty]) => ({
+        menu_item_id: Number(id),
+        quantity: qty,
+      }));
+
+      try {
+        const res = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        for (const id of Object.keys(cart)) delete cart[id];
+        renderCart();
+        status.textContent = `Order #${data.order_id} placed. Total ${money(data.total_cents)}. Thank you! 🌸`;
+      } catch (err) {
+        status.textContent = "Sorry, the order didn't go through. Please try again.";
+        button.disabled = false;
+      }
+    }
+
+    document.getElementById("place-order").addEventListener("click", placeOrder);
+    loadMenu()
+      .then(renderCart)
+      .catch(() => {
+        document.getElementById("menu").textContent = "Couldn't load the menu.";
+      });
   </script>
 </body>
 </html>

@@ -24,6 +24,7 @@ MENU = [
 def get_conn():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
 
@@ -37,6 +38,22 @@ def init_db():
                 price_cents INTEGER NOT NULL,
                 description TEXT,
                 seasonal    INTEGER NOT NULL DEFAULT 0
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS orders (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+                total_cents INTEGER NOT NULL
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS order_items (
+                id               INTEGER PRIMARY KEY AUTOINCREMENT,
+                order_id         INTEGER NOT NULL REFERENCES orders(id),
+                menu_item_id     INTEGER NOT NULL REFERENCES menu_items(id),
+                quantity         INTEGER NOT NULL CHECK (quantity > 0),
+                unit_price_cents INTEGER NOT NULL
             )
         """)
         conn.executemany(
