@@ -159,3 +159,9 @@ main.home section { margin-top: 40px; }
 .visit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 #visit h3 { margin: 0 0 4px; font-size: 1rem; }
 #visit p  { margin: 0; color: #5a4840; }
+
+/* --- Logo --- */
+.brand { display: inline-flex; align-items: center; gap: 10px; }
+.brand img { display: block; }
+.hero-logo { display: block; margin: 0 auto 20px; width: 160px; height: 160px; }
+@media (max-width: 600px) { .hero-logo { width: 120px; height: 120px; } }
