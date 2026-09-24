@@ -1,15 +1,17 @@
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from db import get_conn, init_db
+from db import get_conn
+from insights import insights
+from simulate import simulate
 
 STATIC = Path(__file__).parent / "static"
 
-init_db()  # make sure the tables and menu exist before serving
+simulate()  # builds tables + menu, then (re)generates a year of demo orders
 
 app = FastAPI(title="Bloom Cafe")
 
@@ -63,9 +65,19 @@ def create_order(order: OrderIn):
     return {"order_id": order_id, "total_cents": total}
 
 
+@app.get("/api/insights")
+def get_insights(days: int = Query(30, ge=7, le=180)):
+    return insights(days)
+
+
 @app.api_route("/", methods=["GET", "HEAD"])
 def home():
     return FileResponse(STATIC / "index.html")
 
 
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
+
+
+@app.get("/dashboard")
+def dashboard():
+    return FileResponse(STATIC / "dashboard.html")
