@@ -1,0 +1,41 @@
+[
+  {"q": "how did lattes do last week", "tool": "sales_for_item"},
+  {"q": "cold brew sales this month", "tool": "sales_for_item"},
+  {"q": "how many croissants did we sell yesterday", "tool": "sales_for_item"},
+  {"q": "is matcha selling well?", "tool": "sales_for_item"},
+  {"q": "chai numbers for the past 2 weeks", "tool": "sales_for_item"},
+  {"q": "how's the pumpkin spice doing", "tool": "sales_for_item"},
+  {"q": "espresso sales in the last 90 days", "tool": "sales_for_item"},
+  {"q": "did blueberry muffins sell this week", "tool": "sales_for_item"},
+
+  {"q": "what sold best this month", "tool": "top_items"},
+  {"q": "top sellers", "tool": "top_items"},
+  {"q": "most popular drinks lately", "tool": "top_items"},
+  {"q": "which items sell the most", "tool": "top_items"},
+  {"q": "best selling items last week", "tool": "top_items"},
+  {"q": "what are people ordering the most", "tool": "top_items"},
+
+  {"q": "when are we busiest", "tool": "busiest_times"},
+  {"q": "what's the busiest hour", "tool": "busiest_times"},
+  {"q": "slowest time of day", "tool": "busiest_times"},
+  {"q": "which day of the week is busiest", "tool": "busiest_times"},
+  {"q": "when should I schedule more staff", "tool": "busiest_times"},
+  {"q": "what time is the morning rush", "tool": "busiest_times"},
+
+  {"q": "how was this month compared to last month", "tool": "compare_periods"},
+  {"q": "are sales up or down", "tool": "compare_periods"},
+  {"q": "how's business going", "tool": "compare_periods"},
+  {"q": "revenue this week vs last week", "tool": "compare_periods"},
+  {"q": "are we doing better than before", "tool": "compare_periods"},
+  {"q": "how much money did we make this month", "tool": "compare_periods"},
+
+  {"q": "anything unusual lately", "tool": "recent_alerts"},
+  {"q": "any problems I should know about", "tool": "recent_alerts"},
+  {"q": "were there any weird days", "tool": "recent_alerts"},
+  {"q": "did anything go wrong this month", "tool": "recent_alerts"},
+
+  {"q": "what's the weather tomorrow", "tool": "unknown"},
+  {"q": "write me a poem about coffee", "tool": "unknown"},
+  {"q": "who is the store manager", "tool": "unknown"},
+  {"q": "how do I make a latte", "tool": "unknown"}
+]

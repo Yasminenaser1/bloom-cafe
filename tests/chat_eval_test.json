@@ -1,0 +1,25 @@
+[
+  {"q": "how many cappucinos last month", "tool": "sales_for_item"},
+  {"q": "oat latte numbers pls", "tool": "sales_for_item"},
+  {"q": "are ppl still buying americanos", "tool": "sales_for_item"},
+
+  {"q": "whats our number 1 item", "tool": "top_items"},
+  {"q": "list the best sellers for the past week", "tool": "top_items"},
+  {"q": "which drink is the most popular", "tool": "top_items"},
+
+  {"q": "what hour do we get slammed", "tool": "busiest_times"},
+  {"q": "is the afternoon dead?", "tool": "busiest_times"},
+  {"q": "busiest weekday?", "tool": "busiest_times"},
+
+  {"q": "did we make more this week than last", "tool": "compare_periods"},
+  {"q": "sales trend this month?", "tool": "compare_periods"},
+  {"q": "hows revenue looking vs before", "tool": "compare_periods"},
+
+  {"q": "anything weird happen recently", "tool": "recent_alerts"},
+  {"q": "was there an outage or something", "tool": "recent_alerts"},
+  {"q": "red flags this month?", "tool": "recent_alerts"},
+
+  {"q": "can you order more milk for me", "tool": "unknown"},
+  {"q": "what's your favorite drink", "tool": "unknown"},
+  {"q": "help me hire a barista", "tool": "unknown"}
+]
