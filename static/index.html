@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bloom Cafe</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>Bloom Cafe</h1>
+    <p>Coffee, tea, and fresh pastries.</p>
+  </header>
+  <main id="menu">Loading menu…</main>
+
+  <script>
+    async function loadMenu() {
+      const res = await fetch("/api/menu");
+      const items = await res.json();
+
+      // Group items by category
+      const byCategory = {};
+      for (const item of items) {
+        (byCategory[item.category] ??= []).push(item);
+      }
+
+      const main = document.getElementById("menu");
+      main.innerHTML = "";
+
+      for (const [category, list] of Object.entries(byCategory)) {
+        const section = document.createElement("section");
+        const heading = document.createElement("h2");
+        heading.textContent = category;
+        section.append(heading);
+
+        for (const item of list) {
+          const row = document.createElement("div");
+          row.className = "item";
+          row.innerHTML = `<div><h3></h3><p></p></div><span class="price"></span>`;
+          row.querySelector("h3").textContent = item.name + (item.seasonal ? " 🍂" : "");
+          row.querySelector("p").textContent = item.description;
+          row.querySelector(".price").textContent = "$" + (item.price_cents / 100).toFixed(2);
+          section.append(row);
+        }
+        main.append(section);
+      }
+    }
+
+    loadMenu().catch(() => {
+      document.getElementById("menu").textContent = "Couldn't load the menu.";
+    });
+  </script>
+</body>
+</html>

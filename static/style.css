@@ -1,0 +1,31 @@
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #fbf7f2;
+  color: #3b2f2a;
+}
+header {
+  text-align: center;
+  padding: 48px 16px 24px;
+}
+header h1 { margin: 0; font-size: 2.5rem; }
+header p  { margin: 8px 0 0; color: #7a6a60; }
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 16px 48px;
+}
+h2 {
+  border-bottom: 2px solid #e6d8cb;
+  padding-bottom: 6px;
+  margin-top: 32px;
+}
+.item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+}
+.item h3 { margin: 0; font-size: 1rem; }
+.item p  { margin: 4px 0 0; color: #7a6a60; font-size: 0.9rem; }
+.price   { font-weight: 600; white-space: nowrap; }
