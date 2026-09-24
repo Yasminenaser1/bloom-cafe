@@ -109,3 +109,41 @@ for (const btn of document.querySelectorAll(".range button")) {
 }
 
 load(30).catch(showError);
+
+// --- Alerts (anomaly detector) ---
+const shortDate = iso =>
+  new Date(iso + "T00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+async function loadAlerts() {
+  const list = document.getElementById("alerts");
+  const res = await fetch("/api/anomalies");
+  if (!res.ok) throw new Error("anomalies request failed");
+  const events = await res.json();
+
+  list.innerHTML = "";
+  if (events.length === 0) {
+    list.innerHTML = `<li class="muted">No unusual activity in the last 60 days.</li>`;
+    return;
+  }
+
+  for (const e of events) {
+    const li = document.createElement("li");
+    li.className = "alert " + (e.note ? "expected" : e.direction);
+    li.innerHTML = `<span class="icon"></span><div><strong></strong><p></p></div>`;
+
+    const icon = e.note ? "🍂" : e.direction === "drop" ? "▼" : "▲";
+    const what = e.direction === "drop" ? "unusually low" : "unusually high";
+    const unit = e.metric === "All orders" ? "orders" : "sold";
+    const span = e.days === 1 ? shortDate(e.start) : `${shortDate(e.start)} – ${shortDate(e.end)}`;
+
+    li.querySelector(".icon").textContent = icon;
+    li.querySelector("strong").textContent = `${e.metric}: ${what}`;
+    li.querySelector("p").textContent =
+      `${span} · ${e.actual} ${unit} vs ~${e.expected} expected` + (e.note ? ` · ${e.note}` : "");
+    list.append(li);
+  }
+}
+
+loadAlerts().catch(() => {
+  document.getElementById("alerts").innerHTML = `<li class="muted">Couldn't load alerts.</li>`;
+});

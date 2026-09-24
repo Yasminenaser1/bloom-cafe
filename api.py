@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from db import get_conn
 from insights import insights
+from anomalies import detect
 from simulate import simulate
 
 STATIC = Path(__file__).parent / "static"
@@ -81,3 +82,15 @@ app.mount("/static", StaticFiles(directory=STATIC), name="static")
 @app.get("/dashboard")
 def dashboard():
     return FileResponse(STATIC / "dashboard.html")
+
+
+@app.get("/api/anomalies")
+def get_anomalies(days: int = Query(60, ge=14, le=180)):
+    with get_conn() as conn:
+        seasonal = {r["name"] for r in conn.execute(
+            "SELECT name FROM menu_items WHERE seasonal = 1")}
+    events = detect(days)
+    for e in events:
+        if e["metric"] in seasonal and e["direction"] == "spike":
+            e["note"] = "Seasonal item launch: expected, not a problem."
+    return events

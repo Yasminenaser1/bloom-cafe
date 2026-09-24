@@ -52,3 +52,24 @@ th           { color: #7a6a60; font-weight: 500; font-size: 0.9rem; }
 @media (max-width: 720px) {
   .two-col { grid-template-columns: 1fr; }
 }
+
+/* --- Alerts --- */
+.hint  { font-size: 0.85rem; font-weight: 400; color: #7a6a60; margin-left: 6px; }
+#alerts { list-style: none; margin: 0; padding: 0; }
+.muted  { color: #7a6a60; }
+.alert {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+.alert .icon  { font-size: 1.1rem; line-height: 1.4; }
+.alert strong { display: block; }
+.alert p      { margin: 2px 0 0; font-size: 0.9rem; color: #5a4840; }
+.alert.drop     { background: #fbeceb; }
+.alert.drop .icon  { color: #b3413a; }
+.alert.spike    { background: #eaf5ee; }
+.alert.spike .icon { color: #2f7d4f; }
+.alert.expected { background: #f6f1ea; }
