@@ -63,7 +63,7 @@ def create_order(order: OrderIn):
     return {"order_id": order_id, "total_cents": total}
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def home():
     return FileResponse(STATIC / "index.html")
 
