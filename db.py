@@ -44,6 +44,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS orders (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+                source      TEXT NOT NULL DEFAULT 'web',
                 total_cents INTEGER NOT NULL
             )
         """)
