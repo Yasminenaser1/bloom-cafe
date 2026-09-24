@@ -1,0 +1,87 @@
+name: Daily AI report & insights
+
+on:
+  schedule:
+    # GitHub cron runs in UTC. Dallas is UTC-5 in summer and UTC-6 in winter,
+    # so we schedule both. Whichever runs second finds today's report and skips.
+    - cron: "0 12 * * *"    # 7am Dallas during daylight saving time
+    - cron: "0 13 * * *"    # 7am Dallas during standard time
+  workflow_dispatch:         # "Run workflow" button / gh workflow run
+    inputs:
+      force:
+        description: "Regenerate even if today's report exists"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write            # only what's needed: push the new report files
+
+concurrency:
+  group: daily-ai            # never let two runs overlap
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OLLAMA_MODEL: llama3.2:3b
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install Python packages
+        run: pip install -r requirements.txt
+
+      - name: Skip if today's report already exists
+        id: check
+        run: |
+          DAY=$(TZ=America/Chicago date -d yesterday +%F)
+          echo "day=$DAY" >> "$GITHUB_OUTPUT"
+          if [ -f "reports/$DAY.json" ] && [ "${{ inputs.force }}" != "true" ]; then
+            echo "Report for $DAY already published. Skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Ollama
+        if: steps.check.outputs.skip == 'false'
+        run: curl -fsSL https://ollama.com/install.sh | sh
+
+      - name: Start Ollama and download the model
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          # The installer may already have started Ollama; only start it if it isn't answering
+          if ! curl -s http://localhost:11434/api/tags > /dev/null; then
+            ollama serve > /tmp/ollama.log 2>&1 &
+          fi
+          for i in $(seq 1 30); do
+            curl -s http://localhost:11434/api/tags > /dev/null && break
+            sleep 2
+          done
+          ollama pull "$OLLAMA_MODEL"
+
+      - name: Write the report and insights
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          python publish_report.py ${{ inputs.force == true && '--force' || '' }}
+          python insights_agent.py
+
+      - name: Commit and push if anything changed
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports insights
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+            exit 0
+          fi
+          git commit -m "Daily AI report and insights for ${{ steps.check.outputs.day }}"
+          git push
