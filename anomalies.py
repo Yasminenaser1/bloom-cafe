@@ -44,11 +44,17 @@ def judge(actual, expected):
     return None, 1.0
 
 
-def daily_series():
+def daily_series(as_of=None):
     """Units sold per item per day, and orders per day, in Dallas time.
     Days with no sales of an item become 0 instead of disappearing."""
     df = load_lines()
-    today = pd.Timestamp.now(tz=TZ).normalize()
+    # "today" = the day after as_of, so as_of itself is the last day included
+    if as_of is not None:
+        t = pd.Timestamp(as_of)
+        t = t.tz_localize(TZ) if t.tzinfo is None else t.tz_convert(TZ)
+        today = t.normalize() + pd.Timedelta(days=1)
+    else:
+        today = pd.Timestamp.now(tz=TZ).normalize()
     df = df[df["created_at"] < today].assign(day=lambda d: d["created_at"].dt.date)
 
     all_days = pd.date_range(df["day"].min(), (today - pd.Timedelta(days=1)).date(), freq="D").date
@@ -121,8 +127,8 @@ def merge(flags):
     return sorted(events, key=lambda e: e["start"], reverse=True)
 
 
-def detect(days=60):
-    orders, units, today = daily_series()
+def detect(days=60, as_of=None):
+    orders, units, today = daily_series(as_of)
     cutoff = (today - pd.Timedelta(days=days)).date()
     factor = weekday_factors(orders, before=cutoff)
 
