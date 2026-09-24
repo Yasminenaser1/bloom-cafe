@@ -8,9 +8,19 @@
   <link rel="stylesheet" href="/static/dashboard.css">
 </head>
 <body>
+  <nav class="site-nav">
+    <a href="/" class="brand">🌸 Bloom Cafe</a>
+    <div class="links">
+      <a href="/">Home</a>
+      <a href="/menu">Menu</a>
+      <a href="/#visit">Visit</a>
+      <a href="/dashboard" class="active">Dashboard</a>
+    </div>
+  </nav>
+
   <header>
-    <h1>Bloom Cafe</h1>
-    <p>Owner dashboard · <span id="period">Loading…</span></p>
+    <h1>Owner dashboard</h1>
+    <p><span id="period">Loading…</span></p>
     <div class="range">
       <button data-days="7">7 days</button>
       <button data-days="30" class="active">30 days</button>

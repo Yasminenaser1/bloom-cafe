@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bloom Cafe</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <a href="/" class="brand">🌸 Bloom Cafe</a>
+    <div class="links">
+      <a href="/" class="active">Home</a>
+      <a href="/menu">Menu</a>
+      <a href="/#visit">Visit</a>
+      <a href="/dashboard">Dashboard</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <h1>Coffee, tea &amp; fresh pastries</h1>
+    <p>A neighborhood cafe in Dallas. Slow mornings, good espresso, and croissants baked every day.</p>
+    <a class="btn" href="/menu">Order now</a>
+  </section>
+
+  <main class="home">
+    <section class="feature" id="seasonal" hidden>
+      <span class="tag">Seasonal special</span>
+      <h2 id="seasonal-name"></h2>
+      <p id="seasonal-desc"></p>
+      <a class="btn small" href="/menu">Order it</a>
+    </section>
+
+    <section>
+      <h2>Most loved this month</h2>
+      <p class="muted">Straight from our sales, updated every day.</p>
+      <ol id="favorites" class="favorites"><li class="muted">Loading…</li></ol>
+    </section>
+
+    <section>
+      <h2>About us</h2>
+      <p>Bloom Cafe started with a simple idea: a warm place where the coffee is made with care
+         and the pastries come out of the oven every morning. Stop in for a quick latte on your
+         way to work, or stay a while with a matcha and a book.</p>
+    </section>
+
+    <section id="visit">
+      <h2>Visit us</h2>
+      <div class="visit-grid">
+        <div>
+          <h3>Hours</h3>
+          <p>Every day<br>7:00am – 6:00pm</p>
+        </div>
+        <div>
+          <h3>Find us</h3>
+          <p>123 Blossom Street<br>Dallas, TX</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>© Bloom Cafe · a demo project</span>
+    <a href="/dashboard">Owner dashboard</a>
+  </footer>
+
+  <script>
+    // Seasonal special: whichever menu item is marked seasonal in the database
+    fetch("/api/menu")
+      .then(res => res.json())
+      .then(items => {
+        const special = items.find(i => i.seasonal);
+        if (!special) return;
+        document.getElementById("seasonal-name").textContent = special.name + " 🍂";
+        document.getElementById("seasonal-desc").textContent = special.description;
+        document.getElementById("seasonal").hidden = false;
+      })
+      .catch(() => {});
+
+    // Favorites: the top sellers of the last 30 days, from the same analytics the owner sees
+    fetch("/api/insights?days=30")
+      .then(res => res.json())
+      .then(data => {
+        const list = document.getElementById("favorites");
+        list.innerHTML = "";
+        for (const t of data.top_items.slice(0, 3)) {
+          const li = document.createElement("li");
+          li.textContent = t.item;
+          list.append(li);
+        }
+      })
+      .catch(() => {
+        document.getElementById("favorites").innerHTML = "<li class='muted'>Couldn't load favorites.</li>";
+      });
+  </script>
+</body>
+</html>

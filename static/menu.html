@@ -7,9 +7,19 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+  <nav class="site-nav">
+    <a href="/" class="brand">🌸 Bloom Cafe</a>
+    <div class="links">
+      <a href="/">Home</a>
+      <a href="/menu" class="active">Menu</a>
+      <a href="/#visit">Visit</a>
+      <a href="/dashboard">Dashboard</a>
+    </div>
+  </nav>
+
   <header>
-    <h1>Bloom Cafe</h1>
-    <p>Coffee, tea, and fresh pastries.</p>
+    <h1>Our menu</h1>
+    <p>Order ahead and pick it up at the counter.</p>
   </header>
 
   <main>
@@ -24,6 +34,11 @@
       <p id="order-status" role="status"></p>
     </aside>
   </main>
+
+  <footer class="site-footer">
+    <span>© Bloom Cafe · a demo project</span>
+    <a href="/dashboard">Owner dashboard</a>
+  </footer>
 
   <script>
     const money = cents => "$" + (cents / 100).toFixed(2);

@@ -73,7 +73,12 @@ def get_insights(days: int = Query(30, ge=7, le=180)):
 
 @app.api_route("/", methods=["GET", "HEAD"])
 def home():
-    return FileResponse(STATIC / "index.html")
+    return FileResponse(STATIC / "home.html")
+
+
+@app.get("/menu")
+def menu_page():
+    return FileResponse(STATIC / "menu.html")
 
 
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
