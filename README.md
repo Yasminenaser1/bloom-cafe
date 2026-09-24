@@ -134,7 +134,7 @@ pastries sell before 11am). So the model now writes **only the title**, and code
 recommendation from vetted actions tied to data conditions. Details, bad drafts and
 regression tests: [NOTES.md](NOTES.md).
 
-Example: during the cold brew outage, Cold Brew sold ~74 fewer (~$333), but **total sales
+Example: during the cold brew outage, Cold Brew sold about 74 fewer (about $333), but **total sales
 were +4.5%, within normal range**. Customers switched to other items, so the insight says
 so, instead of claiming the cafe lost money.
 
