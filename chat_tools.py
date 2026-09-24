@@ -120,11 +120,14 @@ def sales_for_item(item, days):
                      "units_before": before, "revenue_cents": revenue}}
 
 
-def top_items(days):
+def top_items(days, least=False):
     cur = window(load_lines(), days)
-    top = cur.groupby("item")["quantity"].sum().sort_values(ascending=False).head(5)
+    counts = (cur.groupby("item")["quantity"].sum()
+                 .reindex(list(menu_items()), fill_value=0))     # include items that sold 0
+    top = counts.sort_values(ascending=least).head(5)
     listing = "; ".join(f"{name} ({int(n):,})" for name, n in top.items())
-    answer = f"Top sellers in {period_label(days)}: {listing}."
+    label = "Slowest sellers" if least else "Top sellers"
+    answer = f"{label} in {period_label(days)}: {listing}."
     return {"tool": "top_items", "answer": answer,
             "data": {"days": days, "top": {k: int(v) for k, v in top.items()}}}
 

@@ -129,3 +129,8 @@ class ChatIn(BaseModel):
 def chat(body: ChatIn):
     res = chat_answer(body.question)
     return {"answer": res["answer"], "tool": res["tool"], "suggestion": res.get("suggestion")}
+
+
+@app.get("/chat")
+def chat_page():
+    return FileResponse(STATIC / "chat.html")

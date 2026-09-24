@@ -28,6 +28,7 @@ EXAMPLES = {
         "ranking of items by sales", "what do customers buy most often",
         "top 5 items this month", "favorite drinks of our customers",
         "which items do customers order most",
+        "which items sell the least", "worst selling items",
     ],
     "busiest_times": [
         "what time of day is busiest", "peak hours", "when is the shop quiet",
@@ -49,6 +50,10 @@ EXAMPLES = {
         "what is the capital of France", "translate this sentence", "what's in the news today",
     ],
 }
+
+# Clear comparison wording is a strong signal: no model needed to spot "X vs Y".
+COMPARE = re.compile(r"\b(vs\.?|versus|compar\w*|than)\b")
+LEAST = re.compile(r"\b(least|worst|lowest|slowest|bottom)\b")
 
 HELP = ("I can answer questions about Bloom Cafe's sales. Try: "
         "\"How did lattes do last week?\", \"What sold best this month?\", "
@@ -134,6 +139,10 @@ def route(question):
         alt, alt_score = ranked[1]
         if alt != "unknown" and alt_score >= THRESHOLD:
             tool, score = alt, alt_score
+    rule = None
+    if item is None and COMPARE.search(question.lower()):
+        tool, score, rule = "compare_periods", max(score, THRESHOLD), "comparison words"
+
     suggestion = None
     if score < THRESHOLD:
         if tool != "unknown" and score >= NEAR:
@@ -141,6 +150,7 @@ def route(question):
         tool = "unknown"
     return {
         "suggestion": suggestion,
+        "rule": rule,
         "tool": tool,
         "score": round(score, 2),
         "scores": {k: round(v, 2) for k, v in ranked},
@@ -179,7 +189,7 @@ def answer(question):
     elif tool == "sales_for_item":
         result = sales_for_item(r["item"], days)
     elif tool == "top_items":
-        result = top_items(days)
+        result = top_items(days, least=bool(LEAST.search(question.lower())))
     elif tool == "busiest_times":
         result = busiest_times(days)
     elif tool == "compare_periods":

@@ -49,3 +49,16 @@ for tool in ["top_items", "busiest_times", "compare_periods", "recent_alerts"]:
 q = canonical_question("sales_for_item", "Latte", 7)
 assert route(q)["tool"] == "sales_for_item", f"suggestion {q!r} doesn't route to sales_for_item"
 print("\nAll suggestion buttons route correctly.")
+
+# Every example chip on the chat page must route to the right tool
+CHIPS = {
+    "How did lattes do last week?": "sales_for_item",
+    "What sold best this month?": "top_items",
+    "When are we busiest?": "busiest_times",
+    "How was this month vs last month?": "compare_periods",
+    "Anything unusual lately?": "recent_alerts",
+}
+for q, tool in CHIPS.items():
+    got = route(q)["tool"]
+    assert got == tool, f"chip {q!r} routes to {got}, not {tool}"
+print("All example chips route correctly.")

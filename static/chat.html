@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ask Bloom · Bloom Cafe</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/chat.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <a href="/" class="brand">🌸 Bloom Cafe</a>
+    <div class="links">
+      <a href="/">Home</a>
+      <a href="/menu">Menu</a>
+      <a href="/#visit">Visit</a>
+      <a href="/chat" class="active">Ask Bloom</a>
+      <a href="/dashboard">Dashboard</a>
+    </div>
+  </nav>
+
+  <header>
+    <h1>Ask Bloom</h1>
+    <p>Ask about the cafe's sales. Answers come straight from the data.</p>
+  </header>
+
+  <main class="chat-main">
+    <div class="examples" id="examples">
+      <button>How did lattes do last week?</button>
+      <button>What sold best this month?</button>
+      <button>When are we busiest?</button>
+      <button>How was this month vs last month?</button>
+      <button>Anything unusual lately?</button>
+    </div>
+
+    <div id="log" class="log" role="log" aria-live="polite"></div>
+
+    <form id="ask" class="ask">
+      <input id="question" type="text" maxlength="300" autocomplete="off"
+             placeholder="Ask a question about sales…" aria-label="Your question">
+      <button type="submit">Ask</button>
+    </form>
+    <p class="note">Ask Bloom matches your question to a set of sales tools and fills in the real numbers.
+      It can't place orders or answer general questions, and it doesn't remember earlier
+      messages, so ask each question in full.</p>
+  </main>
+
+  <footer class="site-footer">
+    <span>© Bloom Cafe · a demo project</span>
+    <a href="/dashboard">Owner dashboard</a>
+  </footer>
+
+  <script>
+    const log = document.getElementById("log");
+    const input = document.getElementById("question");
+
+    function addMessage(role, text) {
+      const msg = document.createElement("div");
+      msg.className = "msg " + role;
+      msg.textContent = text;
+      log.append(msg);
+      msg.scrollIntoView({ block: "end", behavior: "smooth" });
+      return msg;
+    }
+
+    async function ask(question) {
+      if (!question) return;
+      addMessage("user", question);
+      input.value = "";
+      const thinking = addMessage("bot thinking", "Thinking…");
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question }),
+        });
+        if (!res.ok) throw new Error("request failed");
+        const data = await res.json();
+        thinking.remove();
+        const msg = addMessage("bot", data.answer);
+
+        if (data.suggestion) {
+          const yes = document.createElement("button");
+          yes.className = "suggest";
+          yes.textContent = "Yes, ask that";
+          yes.addEventListener("click", () => { yes.disabled = true; ask(data.suggestion); });
+          msg.append(document.createElement("br"), yes);
+        }
+      } catch {
+        thinking.textContent = "Sorry, something went wrong. Please try again.";
+        thinking.className = "msg bot";
+      }
+      input.focus();
+    }
+
+    document.getElementById("ask").addEventListener("submit", e => {
+      e.preventDefault();
+      ask(input.value.trim());
+    });
+    for (const btn of document.querySelectorAll("#examples button")) {
+      btn.addEventListener("click", () => ask(btn.textContent));
+    }
+  </script>
+</body>
+</html>
