@@ -3,20 +3,26 @@
 Each run plants random events with a new seed, runs the detector, and scores:
 - recall: how many planted events it caught
 - false alarms: events it flagged that were never planted
+
+Usage:
+  python evaluate.py          # detailed results at the current threshold
+  python evaluate.py sweep    # compare several thresholds (the recall/false-alarm trade-off)
 """
 import random
+import sys
 import tempfile
 from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import anomalies
 import db
-from anomalies import detect
 from simulate import BASE_POPULARITY, TZ, simulate
 
-EVAL_SEEDS = range(100, 110)          # never used while building the detector (dev seed = 42)
+EVAL_SEEDS = range(200, 220)          # FINAL held-out test set: run once
 WINDOW = 60                           # days the detector checks
 IGNORE = {"Pumpkin Spice Latte"}      # seasonal launch: always flagged in Sept, handled separately
+SWEEP = (1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8)
 
 EVENT_TYPES = {
     "item_outage":   {"length": (2, 6), "item_x": 0.0},
@@ -64,10 +70,21 @@ def matches(found, tgt):
             and found["start"] <= end and found["end"] >= start)
 
 
-def run():
+def score(planted, found, today):
+    """Returns (list of (type, caught?, metric), list of false-alarm events)."""
+    matched, results = set(), []
+    for event in planted:
+        tgt = target(event, today)
+        hits = {i for i, f in enumerate(found) if matches(f, tgt)}
+        matched |= hits
+        results.append((event["type"], bool(hits), tgt[0]))
+    extra = [f for i, f in enumerate(found) if i not in matched]
+    return results, extra
+
+
+def run(alphas, verbose):
     today = datetime.now(TZ).date()
-    by_type = defaultdict(lambda: [0, 0])     # type -> [caught, planted]
-    false_alarms = 0
+    totals = {a: {"by_type": defaultdict(lambda: [0, 0]), "false": 0} for a in alphas}
 
     with tempfile.TemporaryDirectory() as tmp:
         db.DB_PATH = Path(tmp) / "eval.db"    # never touch the real bloom.db
@@ -76,33 +93,42 @@ def run():
             db.DB_PATH.unlink(missing_ok=True)
             planted = make_events(random.Random(seed))
             simulate(seed=seed, planted=planted)
-            found = [f for f in detect(days=WINDOW) if f["metric"] not in IGNORE]
 
-            matched, marks = set(), []
-            for event in planted:
-                tgt = target(event, today)
-                hits = {i for i, f in enumerate(found) if matches(f, tgt)}
-                matched |= hits
-                by_type[event["type"]][1] += 1
-                by_type[event["type"]][0] += bool(hits)
-                marks.append(f"{'✓' if hits else '✗'} {event['type']} ({tgt[0]})")
+            for a in alphas:
+                anomalies.ALPHA = a
+                found = [f for f in anomalies.detect(days=WINDOW) if f["metric"] not in IGNORE]
+                results, extra = score(planted, found, today)
+                for kind, caught, _ in results:
+                    totals[a]["by_type"][kind][0] += caught
+                    totals[a]["by_type"][kind][1] += 1
+                totals[a]["false"] += len(extra)
 
-            extra = [f for i, f in enumerate(found) if i not in matched]
-            false_alarms += len(extra)
-            print(f"seed {seed}:  " + "   ".join(marks) + f"   | false alarms: {len(extra)}")
-            for f in extra:
-                print(f"            false alarm: {f['start']} {f['metric']} {f['direction']}")
+                if verbose:
+                    marks = [f"{'✓' if c else '✗'} {k} ({m})" for k, c, m in results]
+                    print(f"seed {seed}:  " + "   ".join(marks) + f"   | false alarms: {len(extra)}")
+                    for f in extra:
+                        print(f"            false alarm: {f['start']} {f['metric']} {f['direction']}")
+            if not verbose:
+                print(f"  seed {seed} done")
+    return totals
 
-    caught = sum(c for c, _ in by_type.values())
-    total = sum(t for _, t in by_type.values())
-    print(f"\nRecall: {caught}/{total} planted events caught ({caught / total:.0%})")
-    for kind in EVENT_TYPES:
-        c, t = by_type[kind]
-        if t:
-            print(f"  {kind:<14} {c}/{t}")
-    print(f"False alarms: {false_alarms} across {len(EVAL_SEEDS)} runs "
-          f"({false_alarms / len(EVAL_SEEDS):.1f} per 60 days)")
+
+def summary(totals):
+    n = len(EVAL_SEEDS)
+    kinds = list(EVENT_TYPES)
+    short = {"item_outage": "outage", "item_dip": "dip", "item_spike": "spike",
+             "traffic_spike": "t_spike", "traffic_drop": "t_drop"}
+    print("\n threshold   recall   " + "  ".join(f"{short[k]:>7}" for k in kinds)
+          + "   false alarms / 60 days")
+    for a, t in totals.items():
+        caught = sum(c for c, _ in t["by_type"].values())
+        total = sum(tt for _, tt in t["by_type"].values())
+        cols = "  ".join(f"{t['by_type'][k][0]:>3}/{t['by_type'][k][1]:<3}" for k in kinds)
+        print(f"  {a:>8.0e}   {caught / total:>5.0%}    {cols}   {t['false'] / n:>6.1f}")
 
 
 if __name__ == "__main__":
-    run()
+    if len(sys.argv) > 1 and sys.argv[1] == "sweep":
+        summary(run(SWEEP, verbose=False))
+    else:
+        summary(run([anomalies.ALPHA], verbose=True))

@@ -1,19 +1,23 @@
-"""Detect unusual days in Bloom Cafe sales.
+"""Detect unusual periods in Bloom Cafe sales.
 
 Daily sales are counts, so we use a Poisson model: given what's normal for this
-metric lately (adjusted for day of week), how likely is today's number by pure
-chance? Very unlikely -> flag it.
+metric (adjusted for day of week), how likely is this number by pure chance?
+
+We judge windows of 1-7 days, not just single days: a small dip that lasts
+several days adds up to strong evidence even when no single day looks odd.
 """
 import math
+from datetime import timedelta
 
 import pandas as pd
 
 from insights import TZ, load_lines
 
-BASELINE_DAYS = 28    # "normal" = median of the 28 days before
-MIN_HISTORY = 14      # need at least this many earlier days before judging a day
-ALPHA = 1e-4          # flag only if chance of happening normally is below 1 in 10,000
-MIN_EXPECTED = 0.5    # floor so an item that normally sells 0 can still be judged
+BASELINE_DAYS = 28        # "normal" = median of the 28 days before a window starts
+MIN_HISTORY = 14          # need at least this many earlier days to judge
+WINDOWS = (1, 2, 3, 5, 7) # lengths of consecutive-day windows to check
+ALPHA = 1e-5              # flag only if chance of happening normally is below 1 in 100,000
+MIN_EXPECTED = 0.5        # floor so an item that normally sells 0 can still be judged
 
 
 def poisson_pmf(i, lam):
@@ -63,57 +67,76 @@ def weekday_factors(orders, before):
     return (hist.groupby(weekdays).mean() / hist.mean()).to_dict()
 
 
-def group_events(flags):
-    """Merge flagged days that are back-to-back for the same metric into one event."""
+def scan(name, series, cutoff, factor):
+    """Judge every 1-7 day window that falls inside the checked period."""
+    days = list(series.index)
+    values = [int(v) for v in series]
+    baseline = series.shift(1).rolling(BASELINE_DAYS, min_periods=MIN_HISTORY).median()
+
+    flags = []
+    for end_i, end in enumerate(days):
+        if end < cutoff:
+            continue
+        for k in WINDOWS:
+            start_i = end_i - k + 1
+            if start_i < 0 or days[start_i] < cutoff:
+                continue
+            base = baseline[days[start_i]]        # normal level from BEFORE the window
+            if pd.isna(base):
+                continue
+            expected = sum(float(base) * factor[days[t].weekday()]
+                           for t in range(start_i, end_i + 1))
+            actual = sum(values[start_i:end_i + 1])
+            direction, chance = judge(actual, expected)
+            if direction and chance < ALPHA:
+                flags.append({"metric": name, "direction": direction,
+                              "start": days[start_i], "end": end,
+                              "actual": actual, "expected": expected, "chance": chance})
+    return flags
+
+
+def overlaps(a, b):
+    return a["start"] <= b["end"] and b["start"] <= a["end"]
+
+
+def merge(flags):
+    """Merge overlapping or back-to-back windows for the same metric into one event.
+    The event is described by its strongest window (least likely by chance)."""
     events = []
-    for f in sorted(flags, key=lambda f: (f["metric"], f["direction"], f["date"])):
+    for f in sorted(flags, key=lambda f: (f["metric"], f["direction"], f["start"])):
         last = events[-1] if events else None
         if (last and last["metric"] == f["metric"] and last["direction"] == f["direction"]
-                and (f["date"] - last["_end"]).days == 1):
-            last["_end"] = f["date"]
-            last["days"] += 1
-            last["actual"] += f["actual"]
-            last["expected"] += f["expected"]
-            last["chance"] = min(last["chance"], f["chance"])
+                and f["start"] <= last["_reach"] + timedelta(days=1)):
+            last["_reach"] = max(last["_reach"], f["end"])
+            if f["chance"] < last["chance"]:
+                last.update({k: f[k] for k in ("start", "end", "actual", "expected", "chance")})
         else:
-            events.append({"metric": f["metric"], "direction": f["direction"],
-                           "_start": f["date"], "_end": f["date"], "days": 1,
-                           "actual": f["actual"], "expected": f["expected"],
-                           "chance": f["chance"]})
+            events.append(dict(f, _reach=f["end"]))
+
     for e in events:
-        e["start"] = str(e.pop("_start"))
-        e["end"] = str(e.pop("_end"))
+        e.pop("_reach")
+        e["days"] = (e["end"] - e["start"]).days + 1
+        e["start"], e["end"] = str(e["start"]), str(e["end"])
+        e["expected"] = int(round(e["expected"]))
     return sorted(events, key=lambda e: e["start"], reverse=True)
 
 
 def detect(days=60):
     orders, units, today = daily_series()
     cutoff = (today - pd.Timedelta(days=days)).date()
-    factor = weekday_factors(orders, before=cutoff)                     # NEW
+    factor = weekday_factors(orders, before=cutoff)
 
-    metrics = [("All orders", orders)] + [(item, units[item]) for item in units.columns]
-    flags = []
-    for name, s in metrics:
-        baseline = s.shift(1).rolling(BASELINE_DAYS, min_periods=MIN_HISTORY).median()
-        for day in s.index:
-            if day < cutoff or pd.isna(baseline[day]):
-                continue
-            expected = float(baseline[day]) * factor[day.weekday()]    # NEW
-            direction, chance = judge(int(s[day]), expected)
-            if direction and chance < ALPHA:
-                flags.append({
-                    "metric": name, "date": day, "direction": direction,
-                    "actual": int(s[day]), "expected": int(round(expected)),
-                    "chance": chance,
-                })
+    traffic = scan("All orders", orders, cutoff, factor)
+    items = []
+    for item in units.columns:
+        items += scan(item, units[item], cutoff, factor)
 
-    # If total traffic spiked/dropped that day, item flags in the same direction are
-    # explained by it: one event, not thirteen.
-    traffic = {(f["date"], f["direction"]) for f in flags if f["metric"] == "All orders"}
-    flags = [f for f in flags
-             if f["metric"] == "All orders" or (f["date"], f["direction"]) not in traffic]
+    # Item windows that overlap a traffic event in the same direction are explained
+    # by it (everything sold more because more people came in): one event, not many.
+    items = [f for f in items
+             if not any(f["direction"] == t["direction"] and overlaps(f, t) for t in traffic)]
 
-    return group_events(flags)
+    return merge(traffic + items)
 
 
 if __name__ == "__main__":

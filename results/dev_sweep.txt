@@ -1,0 +1,28 @@
+  seed 200 done
+  seed 201 done
+  seed 202 done
+  seed 203 done
+  seed 204 done
+  seed 205 done
+  seed 206 done
+  seed 207 done
+  seed 208 done
+  seed 209 done
+  seed 210 done
+  seed 211 done
+  seed 212 done
+  seed 213 done
+  seed 214 done
+  seed 215 done
+  seed 216 done
+  seed 217 done
+  seed 218 done
+  seed 219 done
+
+ threshold   recall    outage      dip    spike  t_spike   t_drop   false alarms / 60 days
+     1e-03     90%     14/14    10/13    12/15     8/8     10/10       6.5
+     1e-04     85%     14/14     8/13    11/15     8/8     10/10       1.9
+     1e-05     83%     14/14     7/13    11/15     8/8     10/10       0.5
+     1e-06     68%     13/14     4/13     6/15     8/8     10/10       0.2
+     1e-07     55%     11/14     2/13     5/15     8/8      7/10       0.1
+     1e-08     52%     11/14     2/13     3/15     8/8      7/10       0.0

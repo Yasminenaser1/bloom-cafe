@@ -1,0 +1,32 @@
+seed 200:  ✓ item_outage (Butter Croissant)   ✓ item_dip (Chocolate Chip Cookie)   ✓ item_spike (Latte)   | false alarms: 0
+seed 201:  ✓ item_outage (Cappuccino)   ✓ item_spike (Butter Croissant)   ✓ item_dip (Matcha Latte)   | false alarms: 1
+            false alarm: 2026-08-09 Oat Milk Latte spike
+seed 202:  ✓ traffic_spike (All orders)   ✓ traffic_drop (All orders)   ✓ item_dip (Matcha Latte)   | false alarms: 0
+seed 203:  ✓ item_outage (Espresso)   ✓ traffic_drop (All orders)   ✗ item_dip (Espresso)   | false alarms: 1
+            false alarm: 2026-08-02 Chai Latte drop
+seed 204:  ✓ traffic_spike (All orders)   ✓ item_outage (Cold Brew)   ✗ item_spike (Butter Croissant)   | false alarms: 0
+seed 205:  ✓ traffic_spike (All orders)   ✓ traffic_drop (All orders)   ✗ item_spike (Americano)   | false alarms: 0
+seed 206:  ✓ item_outage (Oat Milk Latte)   ✓ traffic_drop (All orders)   ✗ item_dip (Latte)   | false alarms: 1
+            false alarm: 2026-09-03 Chocolate Chip Cookie drop
+seed 207:  ✓ traffic_drop (All orders)   ✓ item_dip (Latte)   ✓ item_spike (Latte)   | false alarms: 0
+seed 208:  ✓ item_spike (Cappuccino)   ✗ item_dip (Blueberry Muffin)   ✓ item_outage (Latte)   | false alarms: 0
+seed 209:  ✓ traffic_drop (All orders)   ✓ item_outage (Latte)   ✓ traffic_spike (All orders)   | false alarms: 1
+            false alarm: 2026-08-18 Butter Croissant spike
+seed 210:  ✓ traffic_spike (All orders)   ✓ item_outage (Cappuccino)   ✗ item_spike (Blueberry Muffin)   | false alarms: 3
+            false alarm: 2026-09-18 Matcha Latte spike
+            false alarm: 2026-08-22 Blueberry Muffin spike
+            false alarm: 2026-07-31 Chocolate Chip Cookie spike
+seed 211:  ✓ traffic_drop (All orders)   ✓ item_spike (Chai Latte)   ✓ traffic_spike (All orders)   | false alarms: 0
+seed 212:  ✓ traffic_spike (All orders)   ✓ item_outage (Latte)   ✗ item_spike (Chai Latte)   | false alarms: 0
+seed 213:  ✓ item_dip (Oat Milk Latte)   ✓ traffic_spike (All orders)   ✓ item_outage (Latte)   | false alarms: 0
+seed 214:  ✓ traffic_drop (All orders)   ✓ item_spike (Matcha Latte)   ✗ item_dip (Espresso)   | false alarms: 0
+seed 215:  ✓ item_outage (Americano)   ✓ item_spike (Chai Latte)   ✓ traffic_drop (All orders)   | false alarms: 1
+            false alarm: 2026-08-16 Matcha Latte spike
+seed 216:  ✗ item_dip (Espresso)   ✓ traffic_drop (All orders)   ✓ item_spike (Cold Brew)   | false alarms: 1
+            false alarm: 2026-09-02 Iced Vanilla Latte drop
+seed 217:  ✓ item_spike (Oat Milk Latte)   ✓ item_dip (Latte)   ✓ item_outage (Butter Croissant)   | false alarms: 0
+seed 218:  ✓ item_spike (Cold Brew)   ✗ item_dip (Chai Latte)   ✓ item_outage (Oat Milk Latte)   | false alarms: 0
+seed 219:  ✓ item_spike (Americano)   ✓ item_outage (Cold Brew)   ✓ item_dip (Latte)   | false alarms: 0
+
+ threshold   recall    outage      dip    spike  t_spike   t_drop   false alarms / 60 days
+     1e-05     83%     14/14     7/13    11/15     8/8     10/10       0.5
