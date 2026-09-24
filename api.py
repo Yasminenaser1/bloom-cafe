@@ -10,6 +10,23 @@ from db import get_conn
 from insights import insights
 from anomalies import detect
 from chat import answer as chat_answer
+import threading
+
+# Heavy work (a year of sales data in pandas, the chat model) takes turns instead of
+# running in parallel threads, so memory can't pile up past Render's 512 MB.
+_heavy = threading.Lock()
+
+
+def _one_at_a_time(fn):
+    def wrapper(*args, **kwargs):
+        with _heavy:
+            return fn(*args, **kwargs)
+    return wrapper
+
+
+insights = _one_at_a_time(insights)
+detect = _one_at_a_time(detect)
+chat_answer = _one_at_a_time(chat_answer)
 from simulate import simulate
 
 STATIC = Path(__file__).parent / "static"
