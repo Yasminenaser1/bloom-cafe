@@ -3,6 +3,6 @@ services:
     name: coffee-bloom
     runtime: python
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt && python -c "from chat import model; list(model().embed(['warm up']))"
     startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
     autoDeploy: true
