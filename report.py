@@ -11,6 +11,7 @@ Usage:
   python report.py 10     # reliability test: generate 10 headlines and count outcomes
 """
 import json
+import os
 import re
 import sys
 import urllib.error
@@ -24,7 +25,7 @@ from db import get_conn
 from insights import TZ, load_lines
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "llama3.1:8b"
+MODEL = os.environ.get("BLOOM_MODEL", "llama3.2:3b")   # chosen in the step 2 benchmark
 MAX_ATTEMPTS = 3
 HEADLINE_KEYS = ["day", "revenue", "revenue_vs_usual", "alert_status"]
 FALLBACK_HEADLINE = "{day} brought in {revenue}, {revenue_vs_usual}, and {alert_status}."
