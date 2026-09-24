@@ -134,3 +134,19 @@ def chat(body: ChatIn):
 @app.get("/chat")
 def chat_page():
     return FileResponse(STATIC / "chat.html")
+
+
+@app.get("/api/health")
+def health():
+    """Liveness + memory, read from Linux's /proc (Render); peak via resource elsewhere."""
+    mem = {}
+    try:
+        for line in Path("/proc/self/status").read_text().splitlines():
+            if line.startswith(("VmRSS", "VmHWM")):          # current, peak
+                key, value = line.split(":")
+                mem[{"VmRSS": "current_mb", "VmHWM": "peak_mb"}[key]] = round(int(value.split()[0]) / 1024)
+    except OSError:
+        import resource, sys
+        r = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        mem["peak_mb"] = round(r / (1024 * 1024) if sys.platform == "darwin" else r / 1024)
+    return {"status": "ok", "memory": mem, "limit_mb": 512}
