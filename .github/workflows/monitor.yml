@@ -1,0 +1,57 @@
+name: Monitor site
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"     # every 3 hours
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SITE: https://coffee-bloom.onrender.com
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Is the site up?
+        id: site
+        run: |
+          # Free tier sleeps, so allow time to wake up and retry a few times
+          if curl -fsS --retry 4 --retry-delay 20 --retry-all-errors --max-time 90 "$SITE/api/health"; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Did today's AI report arrive?
+        id: report
+        run: |
+          DAY=$(TZ=America/Chicago date -d yesterday +%F)
+          HOUR=$(TZ=America/Chicago date +%-H)
+          # Only judge after the second daily run has had its chance (8am Dallas)
+          if [ "$HOUR" -lt 9 ] || [ -f "reports/$DAY.json" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open or close the alert issue
+        run: |
+          TITLE="Bloom Cafe needs attention"
+          OPEN=$(gh issue list --state open --search "\"$TITLE\" in:title" --json number --jq '.[0].number')
+          PROBLEMS=""
+          [ "${{ steps.site.outputs.ok }}" = "false" ] && PROBLEMS="$PROBLEMS- The site didn't answer at $SITE/api/health after several tries.\n"
+          [ "${{ steps.report.outputs.ok }}" = "false" ] && PROBLEMS="$PROBLEMS- Today's AI report is missing: both daily runs failed. See the Actions tab.\n"
+
+          if [ -n "$PROBLEMS" ] && [ -z "$OPEN" ]; then
+            printf "Automatic check found:\n\n$PROBLEMS\nThis issue closes itself once checks pass again." \
+              | gh issue create --title "$TITLE" --body-file -
+          elif [ -z "$PROBLEMS" ] && [ -n "$OPEN" ]; then
+            gh issue close "$OPEN" --comment "All checks passing again. Closing automatically."
+          fi

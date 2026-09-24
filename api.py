@@ -127,7 +127,13 @@ class ChatIn(BaseModel):
 
 @app.post("/api/chat")
 def chat(body: ChatIn):
-    res = chat_answer(body.question)
+    try:
+        res = chat_answer(body.question)
+    except Exception:
+        import logging
+        logging.exception("chat failed for question: %r", body.question)
+        return {"answer": "Sorry, I couldn't answer that one. Try one of the example questions.",
+                "tool": "error", "suggestion": None}
     return {"answer": res["answer"], "tool": res["tool"], "suggestion": res.get("suggestion")}
 
 
