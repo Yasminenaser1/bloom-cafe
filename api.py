@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from db import get_conn
 from insights import insights
 from anomalies import detect
+from chat import answer as chat_answer
 from simulate import simulate
 
 STATIC = Path(__file__).parent / "static"
@@ -118,3 +119,13 @@ def latest_report():
 @app.get("/api/ai-insights")
 def latest_insights():
     return read_latest("insights")
+
+
+class ChatIn(BaseModel):
+    question: str = Field(min_length=1, max_length=300)
+
+
+@app.post("/api/chat")
+def chat(body: ChatIn):
+    res = chat_answer(body.question)
+    return {"answer": res["answer"], "tool": res["tool"], "suggestion": res.get("suggestion")}
