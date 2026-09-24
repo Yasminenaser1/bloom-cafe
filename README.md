@@ -24,6 +24,12 @@ measurements are below.
 | **Ask Bloom** (`/chat`) | Ask about sales in plain English; answers use real numbers |
 | **Dashboard** (`/dashboard`) | KPIs vs previous period, charts, anomaly alerts, morning report, AI insights |
 
+### Screenshots
+
+| Home | Menu | Ask Bloom |
+|---|---|---|
+| ![Home page](figures/home.png) | ![Menu with cart](figures/menu.png) | ![Ask Bloom chat](figures/chat.png) |
+
 ## Architecture
 
 ```mermaid
