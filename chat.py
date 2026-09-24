@@ -3,6 +3,7 @@
 No generative AI on the server. MiniLM (via fastembed/ONNX) only measures how
 similar the question is to example questions; code computes every answer.
 """
+import difflib
 import re
 import sys
 
@@ -13,6 +14,8 @@ from chat_tools import (busiest_times, compare_periods, find_item, item_aliases,
 
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 THRESHOLD = 0.40   # below this, the question isn't close enough to anything we can answer
+NEAR = 0.25        # between NEAR and THRESHOLD: close, so offer "Did you mean...?"
+TYPO_CUTOFF = 0.85 # same fuzzy rule as chat_tools.find_item, so mask and find_item agree
 
 EXAMPLES = {
     "sales_for_item": [
@@ -71,6 +74,21 @@ def mask(text):
     t = TIME.sub(" ", text.lower())
     for alias in _aliases:
         t = re.sub(rf"\b{re.escape(alias)}s?\b", "item", t)
+
+    def is_item(chunk):
+        chunk = re.sub(r"[^a-z ]", "", chunk).rstrip("s")
+        return bool(chunk) and bool(difflib.get_close_matches(chunk, _aliases, n=1, cutoff=TYPO_CUTOFF))
+
+    words, out, i = t.split(), [], 0
+    while i < len(words):
+        pair = " ".join(words[i:i + 2]) if i + 1 < len(words) else ""
+        if pair and "item" not in pair and is_item(pair):
+            out.append("item"); i += 2
+        elif words[i] != "item" and is_item(words[i]):
+            out.append("item"); i += 1
+        else:
+            out.append(words[i]); i += 1
+    t = re.sub(r"\bitem(?:\s+item)+\b", "item", " ".join(out))   # "oat latte" -> one item
     return re.sub(r"\s+", " ", t).strip()
 
 
@@ -116,9 +134,13 @@ def route(question):
         alt, alt_score = ranked[1]
         if alt != "unknown" and alt_score >= THRESHOLD:
             tool, score = alt, alt_score
+    suggestion = None
     if score < THRESHOLD:
+        if tool != "unknown" and score >= NEAR:
+            suggestion = canonical_question(tool, item, parse_days(question))
         tool = "unknown"
     return {
+        "suggestion": suggestion,
         "tool": tool,
         "score": round(score, 2),
         "scores": {k: round(v, 2) for k, v in ranked},
@@ -127,10 +149,30 @@ def route(question):
     }
 
 
+def period_words(days):
+    return {1: "yesterday", 7: "last week", 30: "this month"}.get(days, f"in the last {days} days")
+
+
+def canonical_question(tool, item, days):
+    """A clearly-worded version of the question for the "Did you mean...?" button."""
+    when = period_words(days)
+    if tool == "sales_for_item":
+        return f"How did {item} sell {when}?" if item else None
+    return {
+        "top_items": f"What sold best {when}?",
+        "busiest_times": "When are we busiest?",
+        "compare_periods": f"How did sales {when} compare with before?",
+        "recent_alerts": "Anything unusual lately?",
+    }[tool]
+
+
 def answer(question):
     r = route(question)
     tool, days = r["tool"], r["days"]
-    if tool == "unknown":
+    if tool == "unknown" and r["suggestion"]:
+        result = {"tool": "suggest", "answer": f'Did you mean: "{r["suggestion"]}"',
+                  "suggestion": r["suggestion"]}
+    elif tool == "unknown":
         result = {"tool": "unknown", "answer": HELP}
     elif tool == "sales_for_item" and not r["item"]:
         result = {"tool": "clarify", "answer": "Which item? For example: \"How did lattes do last week?\""}
