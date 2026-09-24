@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: bloom-cafe
+    name: coffee-bloom
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
