@@ -44,7 +44,7 @@ flowchart LR
   daily in GitHub Actions (free for public repos) and commits its output; Render displays it.
 - **Ask Bloom** runs on Render with a small **embedding** model (all-MiniLM-L6-v2 via
   fastembed/ONNX). It only decides *which* tool answers the question; code writes the answer.
-  Measured worst case with the dashboard: **307 MB**.
+  On Render, a burst of 9 simultaneous heavy requests (dashboard + chat) peaked at **509 MB** — 3 MB under the limit, after one real out-of-memory crash. Making heavy requests take turns and setting `MALLOC_ARENA_MAX=2` brought the same burst to **312 MB**.
 - **No API keys, no paid services.** Ollama runs locally or in GitHub Actions.
 
 **Stack:** Python, FastAPI, SQLite, pandas, fastembed (ONNX), Ollama, Chart.js,
