@@ -1,0 +1,29 @@
+[
+  {"q": "how's the matcha latte doing this month", "tool": "sales_for_item"},
+  {"q": "chai sales?", "tool": "sales_for_item"},
+  {"q": "croissnts sold yesterday", "tool": "sales_for_item"},
+  {"q": "did we sell a lot of espresso last week", "tool": "sales_for_item"},
+
+  {"q": "what's flying off the shelves", "tool": "top_items"},
+  {"q": "top 3 drinks", "tool": "top_items"},
+  {"q": "which pastry sells best", "tool": "top_items"},
+  {"q": "our most ordered item this week", "tool": "top_items"},
+
+  {"q": "when's the lunch rush", "tool": "busiest_times"},
+  {"q": "what time should I open the extra register", "tool": "busiest_times"},
+  {"q": "slow hours?", "tool": "busiest_times"},
+  {"q": "which day do we see the most customers", "tool": "busiest_times"},
+
+  {"q": "are we making more money than last month", "tool": "compare_periods"},
+  {"q": "how are we trending", "tool": "compare_periods"},
+  {"q": "total sales for the past 2 weeks vs before", "tool": "compare_periods"},
+
+  {"q": "did any item stop selling suddenly", "tool": "recent_alerts"},
+  {"q": "anything I should worry about", "tool": "recent_alerts"},
+  {"q": "spikes or drops lately?", "tool": "recent_alerts"},
+
+  {"q": "set a reminder to clean the machine", "tool": "unknown"},
+  {"q": "what's a good name for a new drink", "tool": "unknown"},
+  {"q": "how many calories in a latte", "tool": "unknown"},
+  {"q": "tell me about the history of coffee", "tool": "unknown"}
+]
