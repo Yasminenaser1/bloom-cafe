@@ -1,27 +1,27 @@
 {
-  "generated_at": "2026-09-24T20:09:15+00:00",
-  "as_of": "2026-09-23",
+  "generated_at": "2026-09-25T16:04:29+00:00",
+  "as_of": "2026-09-24",
   "model": "llama3.2:3b",
   "insights": [
     {
       "kind": "lost_sales",
-      "title": "Cold Brew was not sold as much as expected",
-      "recommendation": "Find out what stopped Cold Brew from selling (2026-09-04 to 2026-09-08) and set up a backup so regulars can still get it next time. Total sales held up: about normal (5% above the usual level).",
-      "summary": "Cold Brew sold 0 instead of about 74 over 5 days (2026-09-04 to 2026-09-08), about $333.00 less Cold Brew revenue. But total sales were about normal ($2,702.35 vs about $2,584.85 expected): customers ordered other items instead (a little more of everything else), so this was not money the cafe lost.",
+      "title": "Cold Brew was missing for 5 days",
+      "recommendation": "Find out what stopped Cold Brew from selling (2026-09-05 to 2026-09-09) and set up a backup so regulars can still get it next time. Total sales held up: about normal (4% above the usual level).",
+      "summary": "Cold Brew sold 0 instead of about 74 over 5 days (2026-09-05 to 2026-09-09), about $333.00 less Cold Brew revenue. But total sales were about normal ($2,730.85 vs about $2,617.84 expected): customers ordered other items instead (a little more of everything else), so this was not money the cafe lost.",
       "title_source": "model: attempt 2"
     },
     {
       "kind": "quiet_window",
       "title": "Fewest orders arrive during 2pm–4pm",
-      "recommendation": "Schedule prep, cleaning and breaks during 2pm–4pm (6.4 orders a day), and have the most staff on at 8am–10am (23.6 orders a day).",
-      "summary": "Over the last 4 weeks, 2pm–4pm was the quietest stretch: 6.4 orders a day (9% of the day's orders), vs 23.6 a day at 8am–10am, the busiest.",
+      "recommendation": "Schedule prep, cleaning and breaks during 2pm–4pm (6.7 orders a day), and have the most staff on at 8am–10am (23.8 orders a day).",
+      "summary": "Over the last 4 weeks, 2pm–4pm was the quietest stretch: 6.7 orders a day (9% of the day's orders), vs 23.8 a day at 8am–10am, the busiest.",
       "title_source": "model: attempt 1"
     },
     {
       "kind": "pastry_timing",
       "title": "Pastries sell more before 11am",
-      "recommendation": "Have most pastries baked and out before 11am: 59% of pastries sell by then. Keep Chocolate Chip Cookie stocked after lunch: 28% of its sales come after 2pm.",
-      "summary": "59% of pastries sell before 11am, when 55% of orders come in. Chocolate Chip Cookie is the afternoon pastry: 28% of it sells after 2pm.",
+      "recommendation": "Have most pastries baked and out before 11am: 58% of pastries sell by then. Keep Chocolate Chip Cookie stocked after lunch: 30% of its sales come after 2pm.",
+      "summary": "58% of pastries sell before 11am, when 54% of orders come in. Chocolate Chip Cookie is the afternoon pastry: 30% of it sells after 2pm.",
       "title_source": "model: attempt 1"
     }
   ]
